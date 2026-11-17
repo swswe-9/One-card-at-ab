@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>원카드 온라인</title>
+<style>
+:root{--accent:#ffd166;--red:#d62839;--panel:#0d3a2b;--line:#2a7a5a}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#f4f1e8;background:radial-gradient(circle at 50% 25%,#1f6f50,#0a2a1f);font-family:system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+button{font:inherit;cursor:pointer;border:0;border-radius:8px;padding:9px 14px;background:var(--accent);color:#2b2100;font-weight:700}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.sub{background:#ffffff22;color:#fff}
+button.danger{background:#e5484d;color:#fff}
+input{font:inherit;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:#06241a;color:#fff;min-width:0}
+.wrap{max-width:520px;margin:0 auto;padding:22px 16px}
+h1{margin:6px 0 2px;font-size:28px}
+.muted{opacity:.7;font-size:14px}
+.box{background:#0a2e22cc;border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.rooms>div{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #ffffff14}
+.code{font-size:40px;letter-spacing:8px;font-weight:800;color:var(--accent)}
+.plist div{padding:8px 10px;border-radius:8px;background:#ffffff12;margin:6px 0}
+
+/* 게임 */
+.game{display:grid;grid-template-columns:1fr 310px;gap:14px;max-width:1150px;margin:0 auto;padding:12px}
+@media(max-width:900px){.game{grid-template-columns:1fr}}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.opps{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+.opp{min-width:110px;padding:8px 12px;border-radius:12px;background:#ffffff14;border:2px solid transparent;text-align:center}
+.opp.turn{border-color:var(--accent);box-shadow:0 0 14px #ffd16688}
+.opp.out{opacity:.35;text-decoration:line-through}
+.opp .n{font-weight:700}
+.opp .c{font-size:22px;font-weight:800}
+.opp .c.one{color:#ff6b6b}
+.opp .off{color:#ff9;font-size:12px}
+.table{display:flex;gap:30px;justify-content:center;align-items:center;padding:20px 8px;flex-wrap:wrap}
+.pile{text-align:center}
+.pile .lbl{margin-top:8px;font-weight:700}
+.pile.low .lbl{color:#ff8a8a}
+.center{text-align:center}
+.badges{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.badge{padding:4px 10px;border-radius:999px;background:#ffffff22;font-size:14px}
+.badge.atk{background:#e5484d;font-weight:800}
+.status{text-align:center;font-size:18px;font-weight:800;margin:4px 0 10px;min-height:28px}
+.status.me{color:var(--accent)}
+.hand{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:10px;min-height:120px}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0 16px}
+
+.card{width:64px;height:92px;border-radius:8px;background:#fff;color:#1b1b1b;position:relative;box-shadow:0 2px 6px #0007;display:flex;align-items:center;justify-content:center;font-weight:800;user-select:none;flex:none}
+.card.red{color:var(--red)}
+.card .r{position:absolute;top:4px;left:6px;font-size:16px;line-height:1}
+.card .r2{position:absolute;bottom:4px;right:6px;font-size:16px;line-height:1;transform:rotate(180deg)}
+.card .s{font-size:32px}
+.card.joker{flex-direction:column;font-size:11px;gap:2px}
+.card.joker .s{font-size:26px}
+.card.joker.color{color:#b01fc8}
+.card .tiny{font-size:10px;font-weight:600}
+.card.back{background:repeating-linear-gradient(45deg,#8b1e3f,#8b1e3f 6px,#a82a50 6px,#a82a50 12px);border:3px solid #fff}
+.card.big{width:92px;height:132px}
+.card.big .s{font-size:48px}
+.card.big .r,.card.big .r2{font-size:20px}
+.card.stack{box-shadow:3px 3px 0 #fff3,6px 6px 0 #fff2,2px 2px 8px #0008}
+.hand .card{cursor:pointer;transition:transform .12s}
+.hand.mine .card.ok{outline:3px solid var(--accent)}
+.hand.mine .card.ok:hover{transform:translateY(-12px)}
+.hand.mine .card.no{opacity:.45;cursor:not-allowed}
+
+.side .box{margin-top:0}
+.side h3{margin:0 0 8px;font-size:15px}
+.trk{display:grid;grid-template-columns:20px repeat(13,1fr);gap:2px;align-items:center}
+.chip{height:24px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;border-radius:4px;background:#ffffff20}
+.chip.s{background:none;font-size:15px}
+.chip.s.red{color:#ff7b86}
+.chip.buried{background:#00000055;color:#ffffff55;text-decoration:line-through}
+.chip.top{background:var(--accent);color:#2b2100}
+.chip.mine{outline:2px solid #6cc3ff;color:#bfe6ff}
+.jk{display:flex;gap:4px;margin-top:4px}
+.jk .chip{flex:1;font-size:11px}
+.stat{font-size:13px;line-height:1.7;margin-top:8px}
+.log{max-height:230px;overflow:auto;font-size:13px;line-height:1.55}
+.log div{padding:1px 0;border-bottom:1px solid #ffffff10}
+
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%);background:#000c;border:1px solid #fff4;padding:10px 16px;border-radius:10px;z-index:50;max-width:90vw}
+.toast.big{top:38%;font-size:22px;font-weight:800;padding:20px 26px;background:#7c2d12ee;border:2px solid var(--accent);text-align:center}
+.modal{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:40}
+.modal .box{background:#0d3a2b;text-align:center;min-width:260px}
+.suits{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.suits button{font-size:30px;padding:8px 16px;background:#fff}
+.suits button.red{color:var(--red)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const SYM = { S: '♠', H: '♥', D: '♦', C: '♣' };
+const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const SUITS = ['S','H','D','C'];
+const isJoker = c => c === 'BJ' || c === 'CJ';
+const suitOf = c => (isJoker(c) ? null : c[0]);
+const rankOf = c => (isJoker(c) ? 'JK' : c.slice(1));
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const k of kids.flat()) {
+    if (k == null || k === false) continue;
+    e.append(k.nodeType ? k : document.createTextNode(k));
+  }
+  return e;
+}
+
+let sess = null, state = null, es = null, recvAt = 0, lastSeq = null, roomsTimer = null, tick = null;
+try { sess = JSON.parse(sessionStorage.getItem('onecard') || 'null'); } catch (_) {}
+const root = document.getElementById('app');
+
+function toast(msg, cls = '', ms = 2400) {
+  const t = h('div', { class: 'toast ' + cls }, msg);
+  document.body.append(t);
+  setTimeout(() => t.remove(), ms);
+}
+
+async function api(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || '오류가 발생했어요');
+  return j;
+}
+const act = (type, extra = {}) =>
+  api('/api/action', { code: sess.code, token: sess.token, type, ...extra }).catch(e => toast(e.message));
+
+function cardEl(id, cls = '') {
+  if (isJoker(id)) {
+    return h('div', { class: `card joker ${id === 'CJ' ? 'color' : 'black'} ${cls}` },
+      h('div', {}, 'JOKER'), h('div', { class: 's' }, '🃏'), h('div', { class: 'tiny' }, id === 'CJ' ? '컬러(+7)' : '흑백(+5)'));
+  }
+  const s = suitOf(id), r = rankOf(id);
+  return h('div', { class: `card ${s === 'H' || s === 'D' ? 'red' : ''} ${cls}` },
+    h('span', { class: 'r' }, r), h('span', { class: 's' }, SYM[s]), h('span', { class: 'r2' }, r));
+}
+const backEl = cls => h('div', { class: 'card back ' + cls });
+
+function sortKey(c) {
+  if (isJoker(c)) return c === 'BJ' ? -2 : -1;
+  return SUITS.indexOf(suitOf(c)) * 20 + RANKS.indexOf(rankOf(c));
+}
+
+// ───────── 연결 ─────────
+function connect() {
+  clearInterval(roomsTimer);
+  if (es) es.close();
+  es = new EventSource(`/api/events?code=${encodeURIComponent(sess.code)}&token=${encodeURIComponent(sess.token)}`);
+  es.onmessage = e => { state = JSON.parse(e.data); recvAt = Date.now(); render(); };
+  es.addEventListener('closed', () => leaveLocal());
+  es.onerror = () => { if (es && es.readyState === 2) leaveLocal('방에 연결할 수 없어요'); };
+}
+function leaveLocal(msg) {
+  sessionStorage.removeItem('onecard');
+  sess = null; state = null; lastSeq = null;
+  if (es) { es.close(); es = null; }
+  clearInterval(tick);
+  showLobby();
+  if (msg) toast(msg);
+}
+
+// ───────── 로비 ─────────
+function showLobby() {
+  clearInterval(roomsTimer); clearInterval(tick);
+  const nick = h('input', { maxlength: 12, placeholder: '닉네임', value: localStorage.getItem('nick') || '' });
+  const rn = h('input', { maxlength: 20, placeholder: '방 이름 (선택)' });
+  const code = h('input', { maxlength: 4, placeholder: '방 코드', style: 'width:110px;text-transform:uppercase' });
+  const list = h('div', { class: 'rooms' });
+  const getNick = () => {
+    const n = nick.value.trim();
+    if (!n) { toast('닉네임을 입력하세요'); return null; }
+    localStorage.setItem('nick', n);
+    return n;
+  };
+  const enter = async (path, body) => {
+    try {
+      const j = await api(path, body);
+      sess = { code: j.code, token: j.token };
+      sessionStorage.setItem('onecard', JSON.stringify(sess));
+      connect();
+    } catch (e) { toast(e.message); }
+  };
+  root.replaceChildren(h('div', { class: 'wrap' },
+    h('h1', {}, '🃏 원카드 온라인'),
+    h('div', { class: 'muted' }, '최대 5인 · 카드 54장 고정 · 카운팅은 직접!'),
+    h('div', { class: 'box' }, h('div', { class: 'row' }, nick)),
+    h('div', { class: 'box' },
+      h('b', {}, '방 만들기'),
+      h('div', { class: 'row', style: 'margin-top:8px' }, rn,
+        h('button', { onclick: () => { const n = getNick(); if (n) enter('/api/create', { nick: n, roomName: rn.value }); } }, '만들기'))),
+    h('div', { class: 'box' },
+      h('b', {}, '코드로 입장'),
+      h('div', { class: 'row', style: 'margin-top:8px' }, code,
+        h('button', { onclick: () => { const n = getNick(); if (n) enter('/api/join', { nick: n, code: code.value }); } }, '입장'))),
+    h('div', { class: 'box' }, h('b', {}, '열린 방'), list)));
+  const refresh = async () => {
+    try {
+      const rooms = await (await fetch('/api/rooms')).json();
+      list.replaceChildren(...(rooms.length ? rooms.map(r => h('div', {},
+        h('span', {}, `${r.name} (${r.count}/${r.max})`),
+        h('button', { class: 'sub', onclick: () => { const n = getNick(); if (n) enter('/api/join', { nick: n, code: r.code }); } }, '입장')))
+        : [h('div', { class: 'muted', style: 'padding-top:8px' }, '열린 방이 없어요. 새로 만들어 보세요!')]));
+    } catch (_) {}
+  };
+  refresh();
+  roomsTimer = setInterval(refresh, 3000);
+}
+
+// ───────── 렌더 ─────────
+function render() {
+  if (!state) return;
+  if (state.phase === 'lobby') renderWaiting(); else renderGame();
+}
+
+function renderWaiting() {
+  clearInterval(tick);
+  const s = state, isHost = s.hostId === s.you;
+  root.replaceChildren(h('div', { class: 'wrap' },
+    h('h1', {}, s.name),
+    h('div', { class: 'muted' }, '친구에게 이 코드를 알려주세요'),
+    h('div', { class: 'box', style: 'text-align:center' }, h('div', { class: 'code' }, s.code)),
+    h('div', { class: 'box' },
+      h('b', {}, `플레이어 ${s.players.length}/${s.max}`),
+      h('div', { class: 'plist' }, s.players.map(p => h('div', {},
+        (p.id === s.hostId ? '👑 ' : '') + p.name + (p.id === s.you ? ' (나)' : '') + (p.connected ? '' : ' · 접속 끊김'))))),
+    h('div', { class: 'row' },
+      isHost
+        ? h('button', { disabled: s.players.length < s.min, onclick: () => act('start') },
+            s.players.length < s.min ? `최소 ${s.min}명 필요` : '게임 시작')
+        : h('span', { class: 'muted' }, '방장이 시작하기를 기다리는 중…'),
+      h('button', { class: 'sub', onclick: async () => { await act('leave'); leaveLocal(); } }, '나가기'))));
+}
+
+function renderGame() {
+  const s = state, me = s.you;
+  const meIdx = s.players.findIndex(p => p.id === me);
+  const myTurn = s.turnId === me && s.phase === 'playing';
+  const turnP = s.players.find(p => p.id === s.turnId);
+  const playable = new Set(s.playable || []);
+  const top = s.top;
+  const oc = s.oneCard;
+
+  // 덱 소진 알림
+  if (lastSeq === null) lastSeq = s.reshuffle.seq;
+  else if (s.reshuffle.seq !== lastSeq) {
+    lastSeq = s.reshuffle.seq;
+    toast(`🔄 덱 소진!\n깔린 카드 ${s.reshuffle.n}장을 섞어 덱에 넣었어요`, 'big', 3800);
+  }
+
+  const order = [];
+  for (let i = 1; i < s.players.length; i++) order.push(s.players[(meIdx + i) % s.players.length]);
+
+  const opps = h('div', { class: 'opps' }, order.map(p => h('div', { class: `opp ${p.id === s.turnId ? 'turn' : ''} ${p.out ? 'out' : ''}` },
+    h('div', { class: 'n' }, p.name),
+    h('div', { class: 'c' + (p.count === 1 ? ' one' : '') }, p.out ? '탈락' : `🂠 ${p.count}`),
+    p.connected ? null : h('div', { class: 'off' }, '접속 끊김'))));
+
+  const badges = h('div', { class: 'badges' },
+    s.attack > 0 ? h('div', { class: 'badge atk' }, `⚔ 공격 +${s.attack}`) : null,
+    h('div', { class: 'badge' }, s.topSuit ? `무늬: ${SYM[s.topSuit]}` : '무늬 자유'),
+    h('div', { class: 'badge' }, s.dir === 1 ? '진행: 시계 ↻' : '진행: 반시계 ↺'));
+
+  const table = h('div', { class: 'table' },
+    h('div', { class: 'pile' + (s.deckCount <= 5 ? ' low' : '') },
+      backEl('big stack'), h('div', { class: 'lbl' }, `덱 ${s.deckCount}장` + (s.deckCount <= 5 ? ' (곧 소진)' : ''))),
+    h('div', { class: 'center' }, cardEl(top, 'big'), badges));
+
+  const timerEl = h('span', { id: 'tt' });
+  const status = h('div', { class: 'status' + (myTurn ? ' me' : '') },
+    s.phase === 'ended' ? '' : myTurn ? '🟡 내 차례! ' : `${turnP ? turnP.name : ''}님의 차례 `, s.phase === 'playing' ? timerEl : null);
+
+  const sorted = s.hand.slice().sort((a, b) => sortKey(a) - sortKey(b));
+  const hand = h('div', { class: 'hand' + (myTurn ? ' mine' : '') }, sorted.map(c => {
+    const el = cardEl(c, myTurn ? (playable.has(c) ? 'ok' : 'no') : '');
+    el.addEventListener('click', () => {
+      if (s.phase !== 'playing') return;
+      if (!myTurn) return toast('내 차례가 아니에요', '', 1200);
+      if (!playable.has(c)) return toast(s.attack > 0 ? '공격 중에는 공격 카드(2·A·조커)로만 막을 수 있어요' : '낼 수 없는 카드예요', '', 1600);
+      if (rankOf(c) === '7') return pickSuit(sc => act('play', { card: c, suit: sc }));
+      act('play', { card: c });
+    });
+    return el;
+  }));
+
+  const canCall = oc && oc.id === me && !oc.called;
+  const challengeTarget = oc && oc.id !== me && !oc.called ? s.players.find(p => p.id === oc.id) : null;
+  const actions = h('div', { class: 'actions' },
+    h('button', { disabled: !myTurn, onclick: () => act('draw') }, s.attack > 0 ? `벌칙 ${s.attack}장 받기` : '카드 뽑기'),
+    h('button', { disabled: !canCall, onclick: () => act('call') }, '📣 원카드!'),
+    h('button', { class: 'danger', disabled: !challengeTarget, onclick: () => act('challenge') },
+      challengeTarget ? `🚨 ${challengeTarget.name} 신고` : '🚨 신고'));
+
+  const isHost = s.hostId === me;
+  const win = s.players.find(p => p.id === s.winnerId);
+  const overlay = s.phase === 'ended' ? h('div', { class: 'modal' }, h('div', { class: 'box' },
+    h('h1', {}, win ? `🏆 ${win.name}님 승리!` : '게임 종료'),
+    isHost ? h('button', { onclick: () => act('rematch') }, '다시 하기 (대기실로)') : h('div', { class: 'muted' }, '방장이 다시 시작하기를 기다리는 중…'),
+    h('div', { style: 'margin-top:10px' }, h('button', { class: 'sub', onclick: async () => { await act('leave'); leaveLocal(); } }, '나가기')))) : null;
+
+  const side = h('div', { class: 'side' },
+    h('div', { class: 'box' }, h('h3', {}, '📜 최근 기록'), h('div', { class: 'log', id: 'log' }, s.log.slice().reverse().map(m => h('div', {}, m)))));
+
+  root.replaceChildren(h('div', { class: 'game' },
+    h('div', {},
+      h('div', { class: 'topbar' },
+        h('b', {}, `${s.name} · ${s.code}`),
+        h('button', { class: 'sub', onclick: async () => { if (confirm('정말 나갈까요? (탈락 처리됩니다)')) { await act('leave'); leaveLocal(); } } }, '나가기')),
+      opps, table, status, hand, actions),
+    side, overlay));
+
+  clearInterval(tick);
+  if (s.phase === 'playing') {
+    const upd = () => {
+      const el = document.getElementById('tt');
+      if (el) el.textContent = `⏱ ${Math.max(0, Math.ceil((s.ttl - (Date.now() - recvAt)) / 1000))}초`;
+    };
+    upd();
+    tick = setInterval(upd, 500);
+  }
+}
+
+function pickSuit(cb) {
+  const m = h('div', { class: 'modal' }, h('div', { class: 'box' },
+    h('b', {}, '7 — 바꿀 무늬를 고르세요'),
+    h('div', { class: 'suits' }, SUITS.map(su => h('button', {
+      class: su === 'H' || su === 'D' ? 'red' : '',
+      onclick: () => { m.remove(); cb(su); },
+    }, SYM[su]))),
+    h('div', { style: 'margin-top:12px' }, h('button', { class: 'sub', onclick: () => m.remove() }, '취소'))));
+  document.body.append(m);
+}
+
+if (sess) connect(); else showLobby();
+</script>
+</body>
+</html>
