@@ -1,0 +1,13 @@
+{
+  "name": "onecard-online",
+  "version": "1.0.0",
+  "description": "원카드 온라인 대전 (최대 5인, 카드 카운팅)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
